@@ -151,7 +151,10 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         x_lims=[None, None], y_lims=[None, None], 
         x_width=None, y_width=None, percentile_lims=False,
         ax=None, figsize=(6.4, 6.4), colour="#8ACE00", 
-        linewidth=2, linestyle="-", xlabel=None, ylabel=None):
+        linewidth=2, linestyle="-", xlabel=None, ylabel=None,
+        show_outliers=False, outlier_marker=".", 
+        outlier_alpha=0.5, outlier_markersize=1, 
+        outlier_screen_colour="w", rasterize=True):
     """
     Plot contours based on a 2D histogram.
 
@@ -196,7 +199,19 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         Label for the x axis. Default: None (no label)
     ylabel : str, optional
         Label for the y axis. Default: None (no label)
-
+    show_outliers : bool, optional
+        Show individual points lying outside the lowest contour.
+        Default: False.
+    outlier_marker : str, optional
+        Marker to use if `show_outliers` is True. Default: "."
+    outlier_markersize : float, optional
+        Marker size for outliers. Default: 1
+    outlier_alpha : float, optional
+        Alpha to use for outliers. Default: 0.5.
+    outlier_screen_colour : str, optional
+        Colour to use for blocking the outliers. Default: "w".
+    rasterize : bool, optional
+        Rasterize the outlying points. Default: True.
     Returns
     -------
     ax : matplotlib.axes.Axes
@@ -214,7 +229,13 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         fig = plt.figure(figsize=figsize)
         ax = fig.gca()
     ax.contour(x_grid, y_grid, z, levels=l, colors=colour, 
-        linewidths=linewidth, linestyles=linestyle)
+        linewidths=linewidth, linestyles=linestyle, zorder=50)
+    if show_outliers:
+        ax.contourf(x_grid, y_grid, z, levels=l, 
+            colors="w", extend="max", zorder=25)
+        ax.plot(x, y, linestyle="", marker=outlier_marker,
+            markersize=outlier_markersize, alpha=outlier_alpha, 
+            color=colour, zorder=0)
     if xlabel is not None:
         ax.set_xlabel(xlabel)
     if ylabel is not None:
