@@ -154,7 +154,8 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         linewidth=2, linestyle="-", xlabel=None, ylabel=None,
         show_outliers=False, outlier_marker=".", 
         outlier_alpha=0.5, outlier_markersize=1, 
-        outlier_screen_colour="w", rasterize=True):
+        outlier_screen_colour="w", rasterize=True,
+        centre_on_axis=False, fraction_of_axis=0.9):
     """
     Plot contours based on a 2D histogram.
 
@@ -212,6 +213,13 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         Colour to use for blocking the outliers. Default: "w".
     rasterize : bool, optional
         Rasterize the outlying points. Default: True.
+    centre_on_axis : bool, optional
+        If True, overrides all other axis limits and sets attempts
+        to centre the plotted contours within the axis area. Default: False.
+    fraction_of_axis : bool, option
+        If `centre_on_axis` is True, will position the plotted contours
+        so they occupy approximately this fraction of the axis area in
+        both directions. Default: 0.9.
     Returns
     -------
     ax : matplotlib.axes.Axes
@@ -242,5 +250,46 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         ax.set_ylabel(ylabel)
     ax.set_xlim(np.min(x_edges), np.max(x_edges))
     ax.set_ylim(np.min(y_edges), np.max(y_edges))
+
+    # centre the axes if requested
+    if centre_on_axis is True:
+        ax = centre_axis_on_contours(ax, frac=fraction_of_axis)
     # return the axis
+    return ax
+
+def centre_axis_on_contours(ax, frac=0.9):
+    """
+    Adjust axis limits to encompass the plotted contours.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Axis to apply the adjustment to
+    frac : float, optional
+        Fraction of the x and y directions to occupy with the contours.
+
+    Returns
+    -------
+    ax : matplotlib.axes.Axes
+        Original axes that were passed in
+    """
+    # extract vertices of all contour objects in the axis
+    verts = []
+    for ch in ax.collections:
+        if ch.__class__.__name__ == "PathCollection":
+            for pth in ch.get_paths():
+                verts.append(pth.vertices)
+    verts = np.vstack(verts)
+    # find the most extreme vertices
+    lowerx = np.min(verts[:,0])
+    upperx = np.max(verts[:,0])
+    lowery = np.min(verts[:,1])
+    uppery = np.max(verts[:,1])
+    # find the padding to apply
+    padx = 0.5*(1.0/frac - 1.0)*(upperx - lowerx)
+    pady = 0.5*(1.0/frac - 1.0)*(uppery - lowery)
+    # set the limits
+    ax.set_xlim(lowerx-padx, upperx+padx)
+    ax.set_ylim(lowery-pady, uppery+pady)
+    # return the same axis object
     return ax
