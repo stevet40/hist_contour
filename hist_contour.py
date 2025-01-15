@@ -149,7 +149,7 @@ def hist_levels(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
     return x_centres, y_centres, counts.T, heights, x_edges, y_edges
 
 def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68], 
-        x_lims=[None, None], y_lims=[None, None], 
+        x_lims=[None, None], y_lims=[None, None], x_errs=None, y_errs=None,
         x_width=None, y_width=None, percentile_lims=False,
         ax=None, figsize=(6.4, 6.4), colour="k", 
         linewidth=2, linestyle="-", xlabel=None, ylabel=None, clabel=None,
@@ -181,6 +181,10 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         Limits in the x direction. See `hist_levels`.
     y_lims : (float, float), optional
         Limits in the y direction. See `hist_levels`.
+    x_errs : array-like, optional
+        Error bars to plot on the outliers' x coordinates. Default: None.
+    y_errs : array-like, optional
+        Error bars to plot on the outliers' y coordinates. Default: None.
     x_width : float, optional
         Specified bin width in x direction. See `hist_levels`.
     y_width : float, optional
@@ -273,9 +277,9 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
                 outlier_colour = mpl.colormaps[shading](1-1e-5)
             else:
                 outlier_colour = colour
-        ax.plot(x, y, linestyle="", marker=outlier_marker,
-            markersize=outlier_markersize, alpha=outlier_alpha, 
-            color=outlier_colour, zorder=0)
+        ax.errorbar(x, y, xerr=x_errs, yerr=y_errs, linestyle="", 
+            marker=outlier_marker, markersize=outlier_markersize, 
+            alpha=outlier_alpha, color=outlier_colour, zorder=0)
     if show_histogram:
         _,_,_,hist = ax.hist2d(x, y, bins=[x_edges, y_edges], 
             cmap=histogram_colourmap, zorder=-25, cmin=1e-5)
