@@ -152,11 +152,12 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         x_lims=[None, None], y_lims=[None, None], 
         x_width=None, y_width=None, percentile_lims=False,
         ax=None, figsize=(6.4, 6.4), colour="k", 
-        linewidth=2, linestyle="-", xlabel=None, ylabel=None,
+        linewidth=2, linestyle="-", xlabel=None, ylabel=None, clabel=None,
         show_outliers=False, outlier_colour=None, outlier_marker=".", 
         outlier_alpha=0.5, outlier_markersize=1, 
         outlier_screen_colour="w", rasterize=True, shading=None,
-        centre_on_axis=False, fraction_of_axis=0.9):
+        centre_on_axis=False, fraction_of_axis=0.9,
+        show_histogram=False, histogram_colourmap="jet"):
     """
     Plot contours based on a 2D histogram.
 
@@ -201,6 +202,8 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         Label for the x axis. Default: None (no label)
     ylabel : str, optional
         Label for the y axis. Default: None (no label)
+    clabel : str, optional
+        Label for the colourbar (if there is one). Default: None.
     show_outliers : bool, optional
         Show individual points lying outside the lowest contour.
         Default: False.
@@ -224,10 +227,16 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
     centre_on_axis : bool, optional
         If True, overrides all other axis limits and sets attempts
         to centre the plotted contours within the axis area. Default: False.
-    fraction_of_axis : bool, option
+    fraction_of_axis : bool, optional
         If `centre_on_axis` is True, will position the plotted contours
         so they occupy approximately this fraction of the axis area in
         both directions. Default: 0.9.
+    show_histogram : bool, optional
+        If True, shows the underlying histogram beneath the contours.
+        Default: False.
+    histogram_colourmap : str, optional
+        Colourmap to shade the histogram with if `show_histogram` is True.
+        Default: "jet".
     Returns
     -------
     ax : matplotlib.axes.Axes
@@ -249,7 +258,8 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
     if shading is not None:
         if shading in list(mpl.colormaps):
             fill_colours = [mpl.colormaps[shading](_-1e-5) for _ in levels]
-            fig.colorbar(mpl.cm.ScalarMappable(cmap=shading), ticks=levels)
+            plt.colorbar(mpl.cm.ScalarMappable(cmap=shading), 
+                label=clabel, ticks=levels)
         else:
             fill_colours = shading
         ax.contourf(x_grid, y_grid, z, levels=l, colors=fill_colours, 
@@ -266,6 +276,10 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         ax.plot(x, y, linestyle="", marker=outlier_marker,
             markersize=outlier_markersize, alpha=outlier_alpha, 
             color=outlier_colour, zorder=0)
+    if show_histogram:
+        _,_,_,hist = ax.hist2d(x, y, bins=[x_edges, y_edges], 
+            cmap=histogram_colourmap, zorder=-25, cmin=1e-5)
+        plt.colorbar(hist, label=clabel)
     if xlabel is not None:
         ax.set_xlabel(xlabel)
     if ylabel is not None:
