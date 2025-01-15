@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 def hist_levels(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         x_lims=[None, None], y_lims=[None, None], 
@@ -150,11 +151,11 @@ def hist_levels(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
 def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68], 
         x_lims=[None, None], y_lims=[None, None], 
         x_width=None, y_width=None, percentile_lims=False,
-        ax=None, figsize=(6.4, 6.4), colour="#8ACE00", 
+        ax=None, figsize=(6.4, 6.4), colour="k", 
         linewidth=2, linestyle="-", xlabel=None, ylabel=None,
-        show_outliers=False, outlier_marker=".", 
+        show_outliers=False, outlier_colour=None, outlier_marker=".", 
         outlier_alpha=0.5, outlier_markersize=1, 
-        outlier_screen_colour="w", rasterize=True,
+        outlier_screen_colour="w", rasterize=True, shading=None,
         centre_on_axis=False, fraction_of_axis=0.9):
     """
     Plot contours based on a 2D histogram.
@@ -191,7 +192,7 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
     figsize : (float, float), optional
         Figure size, if no axis provided. Default: (6.4, 6.4).
     colour : str, optional
-        Colour to draw the contours. Default: "#8ACE00"
+        Colour to draw the contours and outliers. Default: "k".
     linewidth : float, optional
         Contour linewidth. Default: 2
     linestyle : str, optional
@@ -203,6 +204,10 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
     show_outliers : bool, optional
         Show individual points lying outside the lowest contour.
         Default: False.
+    outlier_colour : str or None, optional
+        Colour to plot the outliers in. If None, defaults to
+        `colour`, unless `shading` is a colourmap, in which case the 
+        outliers will be plotted in the appropriate colour. Default: None
     outlier_marker : str, optional
         Marker to use if `show_outliers` is True. Default: "."
     outlier_markersize : float, optional
@@ -213,6 +218,9 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         Colour to use for blocking the outliers. Default: "w".
     rasterize : bool, optional
         Rasterize the outlying points. Default: True.
+    shading : None, str, or list of colours, optional
+        If not None, contours will be filled based on a provided
+        colourmap, or list of colours. Default: None.
     centre_on_axis : bool, optional
         If True, overrides all other axis limits and sets attempts
         to centre the plotted contours within the axis area. Default: False.
@@ -237,13 +245,27 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         fig = plt.figure(figsize=figsize)
         ax = fig.gca()
     ax.contour(x_grid, y_grid, z, levels=l, colors=colour, 
-        linewidths=linewidth, linestyles=linestyle, zorder=50)
+            linewidths=linewidth, linestyles=linestyle, zorder=50)
+    if shading is not None:
+        if shading in list(mpl.colormaps):
+            fill_colours = [mpl.colormaps[shading](_-1e-5) for _ in levels]
+            fig.colorbar(mpl.cm.ScalarMappable(cmap=shading), ticks=levels)
+        else:
+            fill_colours = shading
+        ax.contourf(x_grid, y_grid, z, levels=l, colors=fill_colours, 
+            extend='max', linewidths=linewidth, linestyles=linestyle, zorder=25)
     if show_outliers:
-        ax.contourf(x_grid, y_grid, z, levels=l, 
-            colors="w", extend="max", zorder=25)
+        if shading is None:
+            ax.contourf(x_grid, y_grid, z, levels=l, 
+                colors="w", extend="max", zorder=25)
+        if outlier_colour is None:
+            if shading in list(mpl.colormaps):
+                outlier_colour = mpl.colormaps[shading](1-1e-5)
+            else:
+                outlier_colour = colour
         ax.plot(x, y, linestyle="", marker=outlier_marker,
             markersize=outlier_markersize, alpha=outlier_alpha, 
-            color=colour, zorder=0)
+            color=outlier_colour, zorder=0)
     if xlabel is not None:
         ax.set_xlabel(xlabel)
     if ylabel is not None:
