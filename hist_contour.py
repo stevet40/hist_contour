@@ -150,6 +150,7 @@ def hist_levels(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
 
 def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68], 
         x_lims=[None, None], y_lims=[None, None], x_errs=None, y_errs=None,
+        x_bounds=("soft", "soft"), y_bounds=("soft", "soft"),
         x_width=None, y_width=None, percentile_lims=False,
         ax=None, figsize=(6.4, 6.4), colour="k", 
         linewidth=2, linestyle="-", xlabel=None, ylabel=None, clabel=None,
@@ -185,6 +186,13 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         Error bars to plot on the outliers' x coordinates. Default: None.
     y_errs : array-like, optional
         Error bars to plot on the outliers' y coordinates. Default: None.
+    x_bounds : tuple of "hard" and "soft", optional
+        Set if the lower and upper edges in x are "soft" or "hard" limits.
+        If a hard edge is expected, an extra row of empty bins will be
+        padded to give better edge behaviour. Default: ("soft", "soft").
+    y_bounds : tuple of "hard" and "soft", optional
+        Set if the lower and upper edges in y are "soft" or "hard" limits.
+        Default: ("soft", "soft").
     x_width : float, optional
         Specified bin width in x direction. See `hist_levels`.
     y_width : float, optional
@@ -252,6 +260,24 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
         x_bins=x_bins, y_bins=y_bins, levels=levels, x_lims=x_lims, 
         y_lims=y_lims, x_width=x_width, y_width=y_width,
         percentile_lims=percentile_lims)
+
+    # pad if requested
+    if x_bounds[0] == "hard":
+        x_grid = np.insert(x_grid, 0, 2*x_grid[0] - x_grid[1])
+        x_edges = np.insert(x_edges, 0, 2*x_edges[0] - x_edges[1])
+        z = np.insert(z, 0, z[:,0], axis=1)
+    if x_bounds[1] == "hard":
+        x_grid = np.append(x_grid, 2*x_grid[-1] - x_grid[-2])
+        x_edges = np.append(x_edges, 2*x_edges[-1] - x_edges[-2])
+        z = np.append(z, z[:,-1], axis=1)
+    if y_bounds[0] == "hard":
+        y_grid = np.insert(y_grid, 0, 2*y_grid[0] - y_grid[1])
+        y_edges = np.insert(y_edges, 0, 2*y_edges[0] - y_edges[1])
+        z = np.insert(z, 0, z[0], axis=0)
+    if y_bounds[1] == "hard":
+        y_grid = np.append(y_grid, 2*y_grid[-1] - y_grid[-2])
+        y_edges = np.append(y_edges, 2*y_edges[-1] - y_edges[-2])
+        z = np.append(z, z[-1], axis=0)
 
     # plot
     if ax is None:
