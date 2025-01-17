@@ -263,20 +263,16 @@ def hist_contour(x, y, w=None, x_bins=32, y_bins=32, levels=[0.95, 0.68],
 
     # pad if requested
     if x_bounds[0] == "hard":
-        x_grid = np.insert(x_grid, 0, 2*x_grid[0] - x_grid[1])
-        x_edges = np.insert(x_edges, 0, 2*x_edges[0] - x_edges[1])
+        x_grid = np.insert(x_grid, 0, x_edges[0])
         z = np.insert(z, 0, z[:,0], axis=1)
     if x_bounds[1] == "hard":
-        x_grid = np.append(x_grid, 2*x_grid[-1] - x_grid[-2])
-        x_edges = np.append(x_edges, 2*x_edges[-1] - x_edges[-2])
+        x_grid = np.append(x_grid, x_edges[-1])
         z = np.append(z, z[:,-1], axis=1)
     if y_bounds[0] == "hard":
-        y_grid = np.insert(y_grid, 0, 2*y_grid[0] - y_grid[1])
-        y_edges = np.insert(y_edges, 0, 2*y_edges[0] - y_edges[1])
+        y_grid = np.insert(y_grid, 0, y_edges[0])
         z = np.insert(z, 0, z[0], axis=0)
     if y_bounds[1] == "hard":
-        y_grid = np.append(y_grid, 2*y_grid[-1] - y_grid[-2])
-        y_edges = np.append(y_edges, 2*y_edges[-1] - y_edges[-2])
+        y_grid = np.append(y_grid, y_edges[-1])
         z = np.append(z, z[-1], axis=0)
 
     # plot
